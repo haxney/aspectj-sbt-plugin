@@ -5,20 +5,20 @@ import org.aspectj.tools.ajc.Main
 import org.aspectj.bridge.IMessage
 import org.aspectj.bridge.MessageHandler
 
-trait AspectJ extends BasicScalaProject {
-  lazy val aspectjDep = "org.aspectj" % "aspectjtools" % "1.6.10"
-  def javaSrc = info.projectPath / "src" / "main" / "java"
-  def aspectPaths = info.projectPath / "src" / "main" / "java"
+trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths {
+  lazy val aspectjTools = "org.aspectj" % "aspectjtools" % "1.6.11.M2" % "aspectj"
+  lazy val aspectjRt = "org.aspectj"    % "aspectjrt"    % "1.6.11.M2" % "aspectj"
+  lazy val aspectjConf = config("aspectj")
+  def aspectjClasspath = configurationClasspath(aspectjConf)
 
-  lazy val aspectj = aspectjAction describedAs "Run AspectJ"
-  def aspectjAction = task {
-    val main = new Main()
-    val m = new MessageHandler()
-    val aspectPath = aspectPaths.absString
-    val args: Array[String] = Array("-inpath", javaSrc.absString, "-aspectpath", aspectPath, "-d", outputPath.absolutePath)
-    log.info("Running AspectJ")
-    main.run(args, m)
-    log.info("AspectJ complete")
-    None
+  def aspectPaths: PathFinder = configurationClasspath(aspectjConf)
+
+  def aspectjTask(args: => List[String], output: => Path, srcRoot: => Path, aspects: => PathFinder) = {
+    runTask(Some("org.aspectj.tools.ajc.Main"), aspectjClasspath,
+            "-sourceroots" :: srcRoot.absolutePath ::
+            "-aspectpath" :: aspects.absString ::
+            "-d" :: output.absolutePath ::
+            args)
   }
+  lazy val aspectj = aspectjTask(Nil, outputPath, mainJavaSourcePath, aspectPaths)
 }
