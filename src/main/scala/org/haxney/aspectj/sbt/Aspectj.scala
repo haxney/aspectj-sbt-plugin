@@ -4,44 +4,34 @@ import _root_.sbt._
 import org.aspectj.tools.ajc.Main
 import org.aspectj.bridge.IMessage
 import org.aspectj.bridge.MessageHandler
+import java.io.File
 
 trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths {
   lazy val aspectjTools = "org.aspectj" % "aspectjtools" % "1.6.11.M2" % "aspectj"
   lazy val aspectjRt = "org.aspectj"    % "aspectjrt"    % "1.6.11.M2" % "aspectj"
   lazy val aspectjConf = config("aspectj")
 
-
-  def aspectjPaths: PathFinder = configurationClasspath(aspectjConf)
+  def aspectjCompileDescription = "Run AspectJ"
+  def aspectjClasspath: PathFinder = configurationClasspath(aspectjConf)
   def aspectjArgs = List("-1.5")
-
-  /* use default compile options */
-  def aspectjCompileOptions: Seq[CompileOption] = compileOptions ++ aspectjArgs
-  def aspectjLabel = "aspectj"
-  def aspectjSourcePath = mainJavaSourcePath
-  def aspectjSourceRoots = (aspectjSourcePath ##)
-  def aspectjSources = sources(aspectjSourceRoots)
-  def aspectjCompilePath = mainCompilePath
-  def aspectjAnalysisPath = mainAnalysisPath
-  def aspectjClasspath = compileClasspath +++ aspectjPaths
-  def aspectjCompileConfiguration = new AspectjCompileConfig
-  def aspectjCompileConditional = new CompileConditional(aspectjCompileConfiguration, buildCompiler)
-  def aspectjCompileDescription = "Compiles Java sources with AspectJ"
-
-  class AspectjCompileConfig extends BaseCompileConfig {
-    def baseCompileOptions = aspectjCompileOptions
-    def label = aspectjLabel
-    def sourceRoots = aspectjSourceRoots
-    def sources = aspectjSources
-    def outputDirectory = aspectjCompilePath
-    def classpath = aspectjClasspath
-    def analysisPath = aspectjAnalysisPath
-    def fingerprints = Fingerprints(Nil, Nil)
-    def javaOptions = javaOptionsAsString(javaCompileOptions)
+  def aspectjSourceRoot = mainJavaSourcePath
+  def aspectjSourcesRel = (aspectjSourceRoot ##) ** "*.java"
+  def aspectjSources = aspectjSourceRoot ** "*.java"
+  def aspectjAspects = aspectjClasspath
+  def aspectjOutputs = {
+    val newPaths = aspectjSourcesRel.getRelativePaths.map { p =>
+      new File(mainCompilePath.asFile, "\\.java$".r.replaceFirstIn(p, ".class"))
+    }
+    Path.fromFiles(newPaths)
   }
+  override def mainSourceRoots = super.mainSourceRoots --- mainJavaSourcePath
 
-  protected def aspectjAction = task {
-    aspectjCompileConditional.run
-    None
+  protected def aspectjAction = fileTask(aspectjOutputs from aspectjSources) {
+    runTask(Some("org.aspectj.tools.ajc.Main"), aspectjClasspath,
+            "-sourceroots" :: mainJavaSourcePath.absString ::
+            "-aspectpath" :: aspectjAspects.absString ::
+            "-d" :: mainCompilePath.absolutePath ::
+            aspectjArgs).run
   } describedAs aspectjCompileDescription
 
   lazy val aspectj = aspectjAction
