@@ -1,6 +1,7 @@
 package org.haxney.aspectj.sbt
 
 import _root_.sbt._
+import _root_.xsbt._
 import org.aspectj.tools.ajc.Main
 import org.aspectj.bridge.IMessage
 import org.aspectj.bridge.MessageHandler
@@ -28,22 +29,18 @@ trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths
   def aspectjScalaInstance = new ScalaInstance(buildScalaInstance.version,
                                                buildScalaInstance.loader,
                                                buildScalaInstance.libraryJar,
-                                               aspectjCompilePath,
+                                               aspectjCompilePath.asFile,
                                                buildScalaInstance.extraJars)
   def aspectjBuildCompiler = new AnalyzingCompiler(aspectjScalaInstance, componentManager, log)
   def aspectjCompileConditional = new CompileConditional(aspectjCompileConfiguration, aspectjBuildCompiler)
   def aspectjCompileDescription = "Compiles Java sources with AspectJ"
 
-  class AspectjCompileConfig extends BaseCompileConfig {
-    def baseCompileOptions = aspectjCompileOptions
-    def label = aspectjLabel
-    def sourceRoots = aspectjSourceRoots
-    def sources = aspectjSources
-    def outputDirectory = aspectjCompilePath
-    def classpath = aspectjClasspath
-    def analysisPath = aspectjAnalysisPath
-    def fingerprints = Fingerprints(Nil, Nil)
-    def javaOptions = javaOptionsAsString(javaCompileOptions)
+  class AspectjCompileConfig extends MainCompileConfig {
+    override def baseCompileOptions = aspectjCompileOptions
+    override def label = aspectjLabel
+    override def sourceRoots = aspectjSourceRoots
+    override def sources = aspectjSources
+    //def classpath = aspectjClasspath
   }
 
   protected def aspectjAction = task {
