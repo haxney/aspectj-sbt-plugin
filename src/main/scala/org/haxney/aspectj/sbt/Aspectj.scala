@@ -24,7 +24,13 @@ trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths
   def aspectjAnalysisPath = mainAnalysisPath
   def aspectjClasspath = compileClasspath +++ aspectjPaths
   def aspectjCompileConfiguration = new AspectjCompileConfig
-  def aspectjCompileConditional = new CompileConditional(aspectjCompileConfiguration, buildCompiler)
+  def aspectjScalaInstance = new ScalaInstance(buildScalaInstance.version,
+                                               buildScalaInstance.loader,
+                                               buildScalaInstance.libraryJar,
+                                               aspectjCompilePath,
+                                               buildScalaInstance.extraJars)
+  def aspectjBuildCompiler = new AnalyzingCompiler(aspectjScalaInstance, componentManager, log)
+  def aspectjCompileConditional = new CompileConditional(aspectjCompileConfiguration, aspectjBuildCompiler)
   def aspectjCompileDescription = "Compiles Java sources with AspectJ"
 
   class AspectjCompileConfig extends BaseCompileConfig {
