@@ -9,6 +9,7 @@ import org.aspectj.bridge.MessageHandler
 trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths {
   lazy val aspectjTools = "org.aspectj" % "aspectjtools" % "1.6.11"
   lazy val aspectjRt = "org.aspectj"    % "aspectjrt"    % "1.6.11"
+  lazy val aspectFacade = "org.haxney.aspectj" % "aspectj-compiler-facade" % "0.1"
   lazy val aspectjConf = config("aspectj")
 
   implicit def sting2CompileOption(opts: Iterable[String]) = opts.map(CompileOption.apply)
