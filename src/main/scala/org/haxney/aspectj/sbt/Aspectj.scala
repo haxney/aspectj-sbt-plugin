@@ -10,6 +10,7 @@ trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths
   lazy val aspectjRt = "org.aspectj"    % "aspectjrt"    % "1.6.11.M2" % "aspectj"
   lazy val aspectjConf = config("aspectj")
 
+  implicit def sting2CompileOption(opts: Iterable[String]) = opts.map(CompileOption.apply)
 
   def aspectjPaths: PathFinder = configurationClasspath(aspectjConf)
   def aspectjArgs = List("-1.5")
