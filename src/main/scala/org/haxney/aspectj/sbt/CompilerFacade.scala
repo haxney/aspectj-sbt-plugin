@@ -4,33 +4,6 @@ import java.io._
 import _root_.sbt.{Logger, LoggerWriter}
 import org.aspectj.bridge.{IMessage, MessageHandler}
 
-/**
- *
- * An imitation of the real "com.sun.tools.javac.Main" which passes control over
- * to the AspectJ compiler.
- */
-package com.sun.tools.javac {
-  object Main {
-    def compile(args: Array[String], writer: PrintWriter) = {
-      // Hack around the access restrictions to get the underlying Logger
-      val writerField = writer.getClass.getDeclaredField("out")
-      writerField.setAccessible(true)
-      val logWriter = writerField.get(writer)
-      val logField = logWriter.getClass.getDeclaredField("delegate")
-      logField.setAccessible(true)
-      val log = logField.get(logWriter).asInstanceOf[Logger]
-      val handler = new LoggerMessageHandler(log)
-      val aj = new org.aspectj.tools.ajc.Main
-      aj.run(args, handler)
-      handler.retval
-    }
-  }
-}
-
-class LoggerUnwrapper(w: PrintWriter) extends PrintWriter(w) {
-  def getOut = this.out
-}
-
 class LoggerMessageHandler(log: Logger) extends MessageHandler {
   override def handleMessage(message: IMessage) = {
     val m = message.getMessage

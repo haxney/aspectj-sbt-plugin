@@ -7,17 +7,18 @@ import org.aspectj.bridge.IMessage
 import org.aspectj.bridge.MessageHandler
 
 trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths {
-  lazy val aspectjTools = "org.aspectj" % "aspectjtools" % "1.6.11.M2" % "aspectj"
-  lazy val aspectjRt = "org.aspectj"    % "aspectjrt"    % "1.6.11.M2" % "aspectj"
+  lazy val aspectjTools = "org.aspectj" % "aspectjtools" % "1.6.11.M2"
+  lazy val aspectjRt = "org.aspectj"    % "aspectjrt"    % "1.6.11.M2"
   lazy val aspectjConf = config("aspectj")
 
   implicit def sting2CompileOption(opts: Iterable[String]) = opts.map(CompileOption.apply)
+  implicit def sting2JavaCompileOption(opts: Iterable[String]) = opts.map(JavaCompileOption.apply)
 
   def aspectjPaths: PathFinder = configurationClasspath(aspectjConf)
   def aspectjArgs = List("-1.5")
 
   /* use default compile options */
-  def aspectjCompileOptions: Seq[CompileOption] = compileOptions ++ aspectjArgs
+  def aspectjCompileOptions: Seq[JavaCompileOption] = javaCompileOptions ++ aspectjArgs
   def aspectjLabel = "aspectj"
   def aspectjSourcePath = mainJavaSourcePath
   def aspectjSourceRoots = (aspectjSourcePath ##)
@@ -35,12 +36,16 @@ trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths
   def aspectjCompileConditional = new CompileConditional(aspectjCompileConfiguration, aspectjBuildCompiler)
   def aspectjCompileDescription = "Compiles Java sources with AspectJ"
 
-  class AspectjCompileConfig extends MainCompileConfig {
-    override def baseCompileOptions = aspectjCompileOptions
-    override def label = aspectjLabel
-    override def sourceRoots = aspectjSourceRoots
-    override def sources = aspectjSources
-    //def classpath = aspectjClasspath
+  class AspectjCompileConfig extends BaseCompileConfig {
+    def baseCompileOptions = compileOptions
+    def label = aspectjLabel
+    def sourceRoots = aspectjSourceRoots
+    def sources = aspectjSources
+    def outputDirectory = aspectjCompilePath
+    def classpath = aspectjClasspath
+    def analysisPath = aspectjAnalysisPath
+    def fingerprints = Fingerprints(Nil, Nil)
+    def javaOptions = ScalaProject.javaOptionsAsString(aspectjCompileOptions)
   }
 
   protected def aspectjAction = task {
@@ -49,4 +54,5 @@ trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths
   } describedAs aspectjCompileDescription
 
   lazy val aspectj = aspectjAction
+  override def compileOrder = CompileOrder.JavaThenScala
 }
