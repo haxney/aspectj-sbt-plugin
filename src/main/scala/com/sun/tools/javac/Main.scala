@@ -10,7 +10,7 @@ import _root_.org.aspectj.bridge.{IMessage, MessageHandler}
  * to the AspectJ compiler.
  */
 
-object Helper {
+object Main {
   def compile(args: Array[String], writer: PrintWriter) = {
     val writerField = writer.getClass.getDeclaredField("out")
     writerField.setAccessible(true)
