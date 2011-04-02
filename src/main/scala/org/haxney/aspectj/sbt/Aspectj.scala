@@ -2,11 +2,12 @@ package org.haxney.aspectj.sbt
 
 import _root_.sbt._
 import _root_.xsbt._
-import org.aspectj.tools.ajc.Main
-import org.aspectj.bridge.IMessage
-import org.aspectj.bridge.MessageHandler
 
 trait AspectJ extends BasicScalaProject with FileTasks with MavenStyleScalaPaths {
+  // For AspectJ 1.6.11
+  lazy val springRelease = "Spring Framework Release Repository" at "http://maven.springframework.org/release"
+  lazy val aspectjRt = "org.aspectj" % "aspectjrt" % "1.6.11"
+
   lazy val facade = "org.haxney.aspectj" %% "aspectj-compiler-facade" % "0.1" % "aspectj"
   lazy val aspectjConf = config("aspectj")
 
